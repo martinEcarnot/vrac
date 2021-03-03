@@ -2,8 +2,13 @@ library(R.matlab)
 library(rnirs)
 library(nirsextra)
 
+<<<<<<< HEAD
 if (0)  {
 ## EAu
+=======
+
+# EAu
+>>>>>>> 82dba8beaf9d0bba2dd8cefd105496ad62809a49
 f="C:\\Users\\seedmeister\\Documents\\Martin\\R\\eau_Montpellier2012_calib.mat"
 x=readMat(f)
 dat=sp2df(x$Xsais[[1]],x$Ysais[[1]])
@@ -24,6 +29,11 @@ seg= segmkf(n = n, K = 5, typ = "random", nrep = 8)
 fm=cvfit(dat$xp,dat$y, fun=plsr,segm=seg, ncomp=8)
 # fm=cvfit(dat$xp,dat$y, fun=lwplsr,segm=seg, ncomp=10, ncompdis=10, k=n, h=2)
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 82dba8beaf9d0bba2dd8cefd105496ad62809a49
 z <- mse(fm, ~ ncomp + rep)
 # plotmse(z,nam="rmsep" )
 print(min(mse(fm, ~ ncomp)$rmsep))
@@ -33,6 +43,7 @@ print(min(mse(fm, ~ ncomp)$rmsep))
 # fm4=lapply(fm[1:3],function (x) {x[x$ncomp==4,]})
 fm4=lapply(fm[1:3],function (x) {x[x$ncomp==4 & x$rep==1,]})
 plot(fm4$fit$y1,fm4$y$y1)
+<<<<<<< HEAD
 }
 
 
@@ -94,3 +105,9 @@ im=readJPEG(f)
 plot(0,type='n',axes=FALSE,ann=FALSE)
 text(1,0, sprintf('%3.1f%%',0.6),cex = 20)
 rasterImage(im,0,0,1,1)
+=======
+
+# Chloro
+# f="C:\\Users\\seedmeister\\Documents\\Martin\\R\\chlorophylle2011.mat"
+# x=readMat(f)
+>>>>>>> 82dba8beaf9d0bba2dd8cefd105496ad62809a49
