@@ -13,7 +13,7 @@ print(json)
 
 
 response <- GET(url = "http://moleans.cirad.fr:8080/nirs_api/spectra", add_headers("Authorization"=t), query = list("type"="spectrum"))
-response <- GET(url = "http://moleans.cirad.fr:8080/nirs_api/spectra/1", add_headers("Authorization"=t))
+response <- GET(url = "http://moleans.cirad.fr:8080/nirs_api/spectra/3", add_headers("Authorization"=t))
 
 json = fromJSON(rawToChar(response$content))
 print(json)
