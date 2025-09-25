@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 """
-Visualiseur d'images hyperspectrales -> RVB corrigées en réflectance
+Visualiseur d'images hyperspectrales -> RVB (lecture seulement des bandes R, V, B)
 """
 
 import os
@@ -16,13 +16,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.image as mpimg
 
 # --- CONFIG ---
-RGB_BANDS = [60, 30, 10]   # indices des bandes R, G, B
-ID_SPECTRALON = 300        # largeur en colonnes utilisée pour détecter le spectralon
+RGB_BANDS = [82, 54, 14]   # indices des bandes R, G, B
+ID_SPECTRALON = 300        # largeur colonnes utilisée pour détecter le spectralon
 
 class HyperspectralViewer:
     def __init__(self, root):
         self.root = root
-        root.title("Visualisation d'images hyperspectrales (RVB)")
+        root.title("Visualisation hyperspectrale (RVB optimisé)")
         root.geometry("1000x750")
 
         # --- Contrôles ---
@@ -62,7 +62,7 @@ class HyperspectralViewer:
         self.loading_thread = None
 
     def select_folder(self):
-        folder = filedialog.askdirectory()
+        folder = filedialog.askdirectory(initialdir="/media/ecarnot/Crucial X9/2025-09-16_135205_couleur/Fichiers/")
         if not folder:
             return
         found = []
@@ -117,28 +117,29 @@ class HyperspectralViewer:
                 t0 = time.time()
                 hyspex_file = hdr_file[:-4] + ".hyspex"
                 img_obj = envi.open(hdr_file, hyspex_file)
-                arr = np.array(img_obj.load(), dtype=np.float32)  # brut
-                arr = np.transpose(arr, (1, 0, 2))                # (H, W, B)
 
-                # Extraction spectralon (zone colonnes 1..ID_SPECTRALON)
+                # ⚡ lecture directe seulement des bandes RGB
+                arr = img_obj.read_bands(RGB_BANDS).astype(np.float32)  # (rows, cols, 3)
+                arr = np.transpose(arr, (1, 0, 2))                      # (H, W, 3)
+
+                # --- Correction par spectralon ---
                 im0 = arr[:, 1:ID_SPECTRALON, :]
-                nz = np.all(im0 > 0, axis=2)  # masque pixels valides
+                nz = np.all(im0 > 0, axis=2)
+                ref = np.zeros((arr.shape[0], 3), dtype=np.float32)
 
-                ref = np.zeros((arr.shape[0], arr.shape[2]), dtype=np.float32)
                 for x in range(arr.shape[0]):
-                    if np.any(nz[x, :]):  # éviter lignes vides
+                    if np.any(nz[x, :]):
                         ref[x, :] = np.mean(im0[x, nz[x, :], :], axis=0)
                     else:
-                        ref[x, :] = 1.0  # évite division par zéro
+                        ref[x, :] = 1.0
 
-                # Extraction RVB + normalisation par spectralon
-                imrgb = arr[:, :, RGB_BANDS].copy()
+                imrgb = arr.copy()
                 for x in range(arr.shape[0]):
-                    imrgb[x, :, :] = imrgb[x, :, :] / ref[x, RGB_BANDS]
+                    imrgb[x, :, :] = imrgb[x, :, :] / ref[x, :]
 
-                # Normalisation 0-1 pour affichage
-                imrgb = np.clip(imrgb, 0, np.percentile(imrgb, 99))  # évite pixels saturés
-                imrgb = (imrgb - imrgb.min()) / (imrgb.max() - imrgb.min() + 1e-6)
+                # --- Normalisation 0-1 pour affichage ---
+                gamma = 0.7  # essaie aussi 0.6 ou 0.8 pour ajuster
+                imrgb = np.power(imrgb, gamma)
 
                 elapsed = time.time() - t0
                 self.root.after(0, lambda: self._on_image_loaded(hdr_file, imrgb, elapsed, None))
